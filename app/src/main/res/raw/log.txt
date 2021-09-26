@@ -1,0 +1,6 @@
+First I made some extra classes like tile, model, and controller and filled out tile with some useful stuff
+then I implemented the tile class with view just drawing out the 16 squares
+then after a long while with a little help from my dad I got it to move the squares by dragging from an adjacent square to the empty one.
+then I did the setup and reset buttons simultaneously by making a shuffle method that just implements a bunch of random moves
+this also takes care of the always possible enhancement because if I just made a bunch of valid moves starting in the end state it has to be possible.
+finally I made a win screen by turning the background green when all of the spots are correct.

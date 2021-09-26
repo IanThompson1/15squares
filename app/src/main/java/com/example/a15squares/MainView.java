@@ -2,14 +2,19 @@ package com.example.a15squares;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.SurfaceView;
 import java.util.Random;
 import java.util.ArrayList;
-
+/**
+ * main view
+ * does all of the drawing and does extra features like shuffling and checking if complete
+ * implemented by Ian Thompson
+ */
 public class MainView extends SurfaceView{
-//View.OnDragListener
+
     private boolean setup;
     private Paint color;
     private ArrayList<Tile> allTiles;
@@ -20,21 +25,33 @@ public class MainView extends SurfaceView{
     private int endBox;
     private final Random rand = new Random();
     private int random;
+    private int blank;
+    private boolean isComplete;
+    private Paint background;
+    private Paint winBackground;
 
     public MainView(Context context, AttributeSet atr) {
         super(context, atr);
         setWillNotDraw(false);
 
+        //make list of tiles
         allTiles = new ArrayList<Tile>();
         setup = false;
 
+        //colors
         color = new Paint();
         color.setARGB(255,255,100,150);
+        background = new Paint();
+        background.setColor(Color.BLUE);
+        winBackground = new Paint();
+        winBackground.setColor(Color.GREEN);
 
+        //make model
         model = new Model();
     }
 
     protected void onDraw(Canvas canvas){
+
         //set up
         if(!setup){
             for(int i = 0; i<4; i++){
@@ -51,21 +68,21 @@ public class MainView extends SurfaceView{
             shuffle(15, canvas);
             setup = true;
         }
-        //draw tiles
-        for(Tile current:allTiles){
-            current.drawTile(canvas);
-        }
 
-        //move tiles
-        //find empty
-        for(Tile current:allTiles){
-            if(current.getNumber() == 16){
-                emptyX = current.getX();
-                emptyY = current.getY();
+        //find the empty space
+        for(int i=0; i<16; i++){
+            if(allTiles.get(i).getNumber() == 0){
+                blank = i;
             }
         }
 
-        //find start box
+        //shuffles if needed
+        if(model.needToShuffle){
+            shuffle(blank, canvas);
+            model.needToShuffle = false;
+        }
+
+        //find the box where you click down on
         if(model.xDown > 300 && model.xDown < 500){
             if(model.yDown > 300 && model.yDown < 500){
                 startBox = 0;
@@ -107,7 +124,7 @@ public class MainView extends SurfaceView{
                 startBox = 15;
             }
         }
-        //find end box
+        //find the box where you lift up your mouse
         if(model.xUp > 300 && model.xUp < 500){
             if(model.yUp > 300 && model.yUp < 500){
                 endBox = 0;
@@ -150,18 +167,40 @@ public class MainView extends SurfaceView{
             }
         }
 
-        //left column
+        //check if the box you lift up on is empty
         Tile empty = allTiles.get(endBox);
         int none = empty.getNumber();
         if(none == 0) {
-            //check if start i to the right        left                  below                    or above
+            //check if start is to the right        left                  below                    or above the empty space
             if(startBox == endBox+1 || startBox == endBox-1 || startBox == endBox+4 || startBox == endBox-4){
                 swap(startBox, endBox, canvas);
             }
         }
+
+        //checks if complete
+        isComplete = true;
+        for (int i = 1; i < 16; i++) {
+            if (allTiles.get(i - 1).getNumber() != i) {
+                isComplete = false;
+                break;
+            }
+        }
+
+        //draws background
+        if(isComplete){
+            canvas.drawRect(0,0,getWidth(),getHeight(),winBackground);
+        }else{
+            canvas.drawRect(0, 0, getWidth(), getHeight(), background);
+        }
+        isComplete = false;
+
+        //draws tiles
+        for(Tile current:allTiles){
+            current.drawTile(canvas);
+        }
     }
 
-    // swaps a square with the void
+    // swaps a square with the empty space
     public void swap(int X, int no, Canvas c){
         Tile temporary = allTiles.get(X);
         allTiles.get(no).setNumber(temporary.getNumber());
@@ -170,6 +209,7 @@ public class MainView extends SurfaceView{
         allTiles.get(X).drawTile(c);
     }
 
+    //shuffles into a new random but possible state
     public void shuffle(int empty, Canvas c){
         int counter = 0;
         int next = 0;
@@ -191,10 +231,10 @@ public class MainView extends SurfaceView{
             }
 
         }
-        System.out.println("swapped!"+counter);
+        System.out.println("swapped! "+counter);
     }
 
-
+    //gets the model
     public Model getModel(){
         return model;
     }
